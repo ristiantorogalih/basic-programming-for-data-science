@@ -1,0 +1,490 @@
+---
+title: "Eksplorasi Data Retail"
+author: "Yaumil Sitta A"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    df_print: paged
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Membuat Data Frame
+
+Ciri: 
+- Memiliki 2 dimensi dan lebih dari 1 tipe data. 
+- Data Frame merupakan data tabular.
+- Jumlah baris untuk setiap kolom harus sama
+
+```{r}
+sales <- data.frame(Store = c("A", "B", "C"), Sales = c(1000, 1500, NA))
+sales
+```
+
+Row = 3 dan col = 2
+
+`double` hampir sama dengan `numerik.` double menyimpan bilangan desimal
+
+```{r}
+class(sales)
+```
+
+
+
+# Eksplorasi Data Frame Retail
+
+### Membaca data retail dan assign dengan nama `retail`
+
+```{r}
+getwd()
+```
+
+
+```{r}
+# cara 1
+retail <- read.csv(file = "data_input/retail.csv")
+retail
+# cara 2
+
+retail2 <- read.csv(file = "D:/Algoritma/Sitta/P4DS/data_input/retail.csv")
+retail2
+
+```
+
+### Inspect our data menggunakan `names()`, `length()`, dan `dim()`
+```{r}
+names(retail) # untuk ektrak nama-nama kolom dari dataset
+length(retail) # panjang/jumlah dari kolom
+dim(retail) # dimensi
+```
+
+### Investigasi data dengan `head()` dan `tail()`
+```{r}
+head(x = retail, n = 10) # melihat data2 teratas
+tail(x = retail, n = 2) # melihat data2 terbawah
+```
+
+```{r}
+head(x = retail, n = 3)
+```
+
+### Melihat struktur data dengan fungsi `str()`
+```{r}
+str(retail)
+```
+obs = rows
+variables = kolom
+
+Kolom apa yang tipenya belum sesuai?
+- Order.Date -> date
+- Ship.Date -> date
+- Ship.Mode -> factor
+- Category -> factor
+- Sub Category -> factor
+- Segment -> factor
+
+Dari struktur data di atas, variabel/kolom `Order.Date` dan `Ship.Date` perlu diubah ke tipe data yang sesuai. Ubahlah kedua variabel tersebut ke bentuk yang sesuai
+
+Ubahlah `Order.Date` dan `Ship.Date` ke tipe date
+
+Format data sebelumnya
+
+```{r}
+retail$Order.Date <-  as.Date(x = retail$Order.Date, format = "%m/%d/%y")
+retail
+```
+
+
+Ubahlah kolom `Ship.Date` ke dalam tipe date
+
+```{r}
+retail$Ship.Date = as.Date(x = retail$Ship.Date, format = "%m/%d/%y")
+retail
+```
+Assignment operator : `=` atau `<-`
+
+```{r}
+retail$Ship.Date <- as.Date(x=retail$Ship.Date, format = '%D')
+```
+
+
+Kalau formatnya keliru, maka akan menghasilkan NA
+
+
+Ubahlah variabel kolom `Ship.Mode` dan `Segment` ke tipe factor
+```{r}
+retail$Ship.Mode <- as.factor(retail$Ship.Mode)
+retail$Segment <- as.factor(retail$Segment)
+retail
+```
+
+# Subsetting
+
+Menduplikasi fungsi head dengan subsetting retail [ , ]
+
+objek[baris, kolom]
+```{r}
+head(retail)
+retail[c(1:6), ]
+```
+Notes:
+c(1:6) artinya mengambil baris 1 sampai 6
+
+Subsetlah data ke 1, 5,7,10 untuk kolom `Ship.Mode` dan `Profit`
+
+```{r}
+# cara 1 (menggunakan index kolom)
+
+retail[c(1,5,7,10), c(5,15)]
+
+# cara 2 (menggunakan nama kolom)
+
+retail[c(1,5,7,10), c("Profit", "Ship.Mode")]
+```
+
+Buanglah variabel `Row.ID`, `Order.ID`, `Customer.ID`, kemudian assign ke object bernama `retail_clean`. Menggunakan data[,-c()] untuk menghapus kolom tertentu.
+
+```{r}
+# cara 1
+retail_clean <- retail[,-c(1, 2, 6)]
+
+# cara 2
+
+# retail[, -c("Row.ID", "Order.ID", "Customer.ID")] # ini error
+
+subset(x = retail, select = -c(Row.ID, Order.ID, Customer.ID))
+```
+
+
+```{r}
+retail
+retail_clean
+```
+
+
+### Melihat rangkuman dari data `retail_clean` menggunakan fungsi `summary()`
+```{r}
+summary(retail_clean)
+
+retail_clean$Category <- as.factor(retail_clean$Category)
+```
+
+```{r}
+summary(retail_clean)
+```
+
+
+### Dari summary di atas, apa informasi yang kita dapatkan?
+
+1. Rata rata diskon 15.62%
+2. Segmentasi terbesar ada di Consumer 
+3. Pengiriman barang melalui kelas standar
+4. Terdapat kerugian
+5.
+
+
+Subsetting dengan kondisi
+
+Misal saya ingin subset data dengan discount > 0.2
+
+Operator
+
+- == sama dengan
+- < lebih dari
+- <=
+- > kurang dari
+- >=
+- %in% di dalam himpunan
+- ! bukan
+
+```{r}
+retail_clean[retail_clean$Discount == 0.2 , c("Sub.Category", "Discount")]
+```
+
+
+**Dive Deeper**
+
+1. Periksalah summary dari data-data yang rugi
+```{r}
+options(scipen = 999)
+retail_rugi <- retail_clean[retail_clean$Profit < 0 , ]
+retail_rugi
+summary(retail_rugi)
+```
+
+2. Periksalah summary dari data-data yang untung
+```{r}
+retail_untung <- retail_clean[retail_clean$Profit >= 0, ]
+summary(retail_untung)
+```
+
+Dari hasil summary tersebut, apa insight yang bisa diambil?
+1. Dari semua data yang rugi adalah barang2 diskon
+2. Subcategory Paper menghasilkan profit dengan frekuensi paling banyak, dan tidak pernah mengalami kerugian
+3. Table dan chair selalu mengalami kerugian, perlu ditinjau kembali mengenai kedua produk ini
+
+## Subsetting dengan 2 kondisi
+
+Untuk mensubset dengan 2 kondisi dan kedua kondisinya terpenuhi, bisa menggunakan operator `&` dan
+
+Misal saya ingin periksa untuk barang2 yang untung (profit > 0) dan juga didiskon (discount > 0), kebanyakan dari cetagory apa
+```{r}
+retail_diskon <- retail_clean[retail_clean$Profit > 0 & retail_clean$Discount >0 , ]
+retail_diskon
+
+summary(retail_diskon)
+```
+
+Untuk mensubset dengan 2 kondisi tetapi setidaknya *salah satu kondisinya terpenuhi*, bisa menggunakan operator `|` atau
+```{r}
+
+retail_clean[retail_clean$Segment == "Consumer" | retail_clean$Segment == "Home Office", ]
+
+```
+
+*Dive Deeper*:
+
+Berapakah jumlah transaksi yang terjadi pada `Order.Date` tahun 2016 dari data `retail_clean`?
+
+Robinson
+```{r}
+retail_2016 <- retail_clean[retail_clean$Order.Date >= "2016-01-01" & retail_clean$Order.Date < "2017-01-01" , ]
+retail_2016
+```
+
+Rifky
+```{r}
+retail_clean[format(retail_clean$Order.Date, format="%Y")=="2016",]
+
+```
+
+Rahmah
+```{r}
+nrow(retail_clean[(retail_clean$Order.Date>="2016-01-01")& (retail_clean$Order.Date<="2016-12-31"),])
+
+```
+
+nrow() dan ncol()
+```{r}
+nrow(retail_clean) # untuk mengekstrak jumlah rows
+ncol(retail_clean) # untuk mengekstrak jumlah kolom
+```
+
+```{r}
+
+```
+
+
+---------- END OF DAY 2 ---------------
+
+### Mengurutkan data berdasarkan profit terbesar ke terkecil, dan sebaliknya
+
+```{r}
+# mengurutkan dari besar ke kecil
+
+# mengurutkan dari kecil ke besar
+
+```
+
+### Another Subsetting Operator
+
+Contoh penggunaan `%in%` untuk mensubset anggota pada variabel tertentu
+```{r}
+bulan_genap <- c("February", "April", "June", "August", "October", "December")
+
+```
+
+Contoh penggunaan operator `!` bukan
+```{r}
+
+```
+
+Contoh penggunaan operator `!=` tidak sama dengan
+
+```{r}
+
+```
+
+### Frequency Table `table()` dan proportion table `prop.table()`   
+
+Cek jumlah proporsi dari `Ship.Mode`, `Segment`, dan `Category`
+
+### Melihat jumlah tiap-tiap kategori menggunakan `table()`
+```{r}
+# untuk ship.mode
+
+
+# untuk segment
+
+
+# untuk category
+
+
+```
+
+### Cek jumlah proportion table dari variabel `Ship.Mode` dengan `prop.table()`
+```{r}
+
+```
+
+### Multiple Frequency Table dari `Ship.Mode` dan `Category`
+```{r}
+table(retail_clean$Ship.Mode, retail_clean$Category)
+```
+
+```{r}
+prop.table(table(retail_clean$Ship.Mode, retail_clean$Category), 
+           margin = 2)
+```
+Note:
+argumen margin = 1 untuk menjumlahkan perbaris, kalau 2 perkolom
+
+Dari tampilan di atas, apa yang dapat kamu simpulkan?
+1.
+2.
+
+### Membuat Variabel baru bernama profitable yang dihasilkan dari jika profit > 0 maka profitable, jika profit <= 0 maka non-profitable
+
+```{r}
+
+```
+
+### Cek kembali data retail setelah penambahan variabel
+```{r}
+
+```
+
+**Dive Deeper**
+
+1. Which following segment makes up the most of our “>1000 Sales” transaction? Subset the data for retail$Sales >= 1000 and then use table() with the “Segment” and “Category” variables as its parameters
+
+2. Among the transactions that ship on “First Class” in `retail_clean`, how many of them were office supplies (to two decimal points)?
+
+
+### Pembahasan No. 1
+```{r}
+
+```
+
+### Pembahasan No. 2
+```{r}
+
+```
+
+### Sample
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+### Cross Tabulation
+
+#### menggunakan `xtabs()`
+```{r}
+
+```
+
+#### menggunakan `plot(xtabs())` untuk melihat visualisasi dari cross tab
+```{r}
+
+```
+
+
+#### menggunakan `aggregate()`
+```{r}
+
+```
+
+pilihan FUN:
+mean, median, sum, min, max, var, sd, etc  
+
+
+### Membuat Fungsi
+
+```{r}
+pembagian <- function(x, y){
+  m <- x / y
+  m
+}
+pembagian(x = 30, y = 5)
+```
+
+### cara install dan load library/package
+
+```{r}
+
+```
+
+**EXTRA EXERCISE**
+
+A 30-minutes exercise in Break Out Room.
+
+Create a new project, name it with cofee_study. Please create a Rmd, .RProj, and copy the coffee_study.txt dataset to the folder coffee_study. Then, answers these questions below:
+
+1. Calculate the mean age for each combined level of both gender and drink
+
+2. Calculate the mean age for each gender
+
+3. How many male who drinks green tea? 
+
+4. Please order the dataset based on its score (Urutkan dari besar ke kecil)
+
+5. How many people who drinks coffee who has lower than the median age?
+
+After that, knit the `.Rmd` file to `.html` and collect the `.html` file to the classroom task named P4DS Exercise.
+
+## Link tambahan
+### Untuk mencari data yang bisa diakses secara gratis : 
++ [kaggle](https://www.kaggle.com/datasets)
++ [UCI Machine Learning](https://archive.ics.uci.edu/ml/index.php)
++ [Tidy Tuesday](https://github.com/rfordatascience/tidytuesday)
+
+### Untuk mempelajari lebih lanjut terkait data tanggal menggunakan as.Date
++ [Date Formats in R](https://www.r-bloggers.com/date-formats-in-r/)
++ [foragoodstrftime](https://foragoodstrftime.com/)
+
+## Cara untuk membuat .RProj
+### Tahapan membuat .RProj ketika **belum** mempunyai folder untuk .RProj    
+  + Klik menu File 
+  + New Project 
+  + New Directory 
+  + New Project 
+  + Isi directory name
+  + Specify working directory path yang diinginkan
+  
+### Tahapan membuat .RProj ketika **sudah** mempunyai folder untuk .RProj
+  + Klik menu File
+  + New Project
+  + Existing Directory
+  + Tentukan RProj ingin diletakkan di folder apa (Specify Working Directory)
+  
+## Beberapa package yang bisa diinstall untuk template R-Markdown
+  + install.packages("prettydoc")
+  + install.packages("rmdformats")
+  + install.packages("hrbrthemes")
+  
+## Custom tampilan .Rmd bisa dipelajari lebih lanjut di :
+  + Help - Cheatsheets - RMarkdown Cheatsheet
+  + [https://bookdown.org/yihui/rmarkdown/html-document.html](https://bookdown.org/yihui/rmarkdown/html-document.html) 
+  + Masuk ke [rpubs.com](https:://rpubs.com/) untuk referensi laporan yang telah orang lain buat
+  
+  
+- perbedaan r workspace, r project, sama rmd apa mba?
+- kalua baca file excel pakai ftable kah?
+- transpose data frame
+- header name diganti
+- penamaan kolom (apakah boleh pake spasi)
